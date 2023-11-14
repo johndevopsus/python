@@ -1,0 +1,37 @@
+import ssl
+import socket
+import OpenSSL
+from datetime import datetime
+
+def get_certificate_info(hostname):
+    try:
+        context = ssl.create_default_context()
+        with socket.create_connection((hostname, 443)) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                cert = ssock.getpeercert()
+                not_after = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z")
+                remaining_days = (not_after - datetime.now()).days
+
+                if remaining_days < 0:
+                    print(f"{hostname}: Certificate expired {abs(remaining_days)} days ago.")
+                else:
+                    print(f"{hostname}: SSL certificate is valid. Expires in {remaining_days} days.")
+    except ssl.SSLError as e:
+        print(f"{hostname}: SSL certificate error - {str(e)}")
+    except socket.error as e:
+        print(f"{hostname}: Connection error - {str(e)}")
+
+def check_certificate_status(filename):
+    try:
+        with open(filename, 'r') as file:
+            hostnames = [line.strip() for line in file.readlines()]
+
+        for hostname in hostnames:
+            get_certificate_info(hostname)
+    except FileNotFoundError:
+        print(f"File '{filename}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+# Replace 'hostname_file.txt' with the name of your file containing hostnames
+check_certificate_status('hostname_file.txt')
