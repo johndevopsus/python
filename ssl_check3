@@ -35,3 +35,37 @@ def check_certificate_status(filename):
 
 # Replace 'hostname_file.txt' with the name of your file containing hostnames
 check_certificate_status('hostname_file.txt')
+
+
+
+import requests
+from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+
+# Suppress only the InsecureRequestWarning from urllib3 needed for self-signed certificates
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+def check_certificate_status(hostname):
+    try:
+        response = requests.get(f"https://{hostname}", verify=True)
+        cert_expiry_date = datetime.strptime(response.headers['Expires'], '%a, %d %b %Y %H:%M:%S %Z')
+        remaining_days = (cert_expiry_date - datetime.now()).days
+
+        if remaining_days < 0:
+            print(f"{hostname}: SSL certificate is expired {abs(remaining_days)} days ago.")
+        else:
+            print(f"{hostname}: SSL certificate is valid. Expires in {remaining_days} days.")
+    except requests.exceptions.SSLError as e:
+        print(f"{hostname}: SSL certificate is not valid.")
+    except Exception as e:
+        print(f"{hostname}: Connection error - {str(e)}")
+
+# Read hostnames from a text file (each hostname on a new line)
+file_path = 'hostname_list.txt'  # Replace with the path to your text file
+with open(file_path, 'r') as file:
+    hostnames = [line.strip() for line in file]
+
+# Check SSL certificate status for each hostname
+for hostname in hostnames:
+    check_certificate_status(hostname)
+
