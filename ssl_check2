@@ -1,0 +1,32 @@
+'''You can use the `requests` library in Python to make HTTPS connections and the `ssl` library to check the certificate details. Here's a simple script that should help you get started:'''
+
+```python
+import requests
+import ssl
+from datetime import datetime
+
+websites = ['https://www.example1.com', 'https://www.example2.com', 'https://www.example3.com']
+
+for website in websites:
+    try:
+        response = requests.get(website, timeout=5)
+        response.raise_for_status()  # Raise HTTPError for bad responses
+        cert = ssl.get_server_certificate((website.split('//')[1].split('/')[0], 443))
+        x509 = ssl.load_certificate(ssl.PEM_CERTIFICATE, cert)
+        expiration_date = datetime.strptime(x509.get_notAfter().decode('utf-8'), '%Y%m%d%H%M%SZ')
+        remaining_days = (expiration_date - datetime.utcnow()).days
+
+        print(f'{website}: Certificate is valid. Remaining days until expiration: {remaining_days} days')
+    except requests.RequestException as e:
+        print(f'{website}: Unable to connect. Error: {e}')
+    except ssl.SSLError as e:
+        print(f'{website}: Certificate error. Error: {e}')
+```
+
+Make sure to install the `requests` library if you haven't already by running:
+
+```bash
+pip install requests
+```
+
+This script attempts to make an HTTPS connection to each website, prints if the connection cannot
