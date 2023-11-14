@@ -1,0 +1,28 @@
+import requests
+from datetime import datetime, timedelta
+from urllib3.exceptions import InsecureRequestWarning
+
+# Suppress only the InsecureRequestWarning from urllib3 needed for self-signed certificates
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+def check_certificate_expiry(url):
+    try:
+        response = requests.get(url, verify=True)
+        cert_expiry_date = datetime.strptime(response.headers['Expires'], '%a, %d %b %Y %H:%M:%S %Z')
+        remaining_days = (cert_expiry_date - datetime.now()).days
+        print(f"{url}: Certificate is valid. Remaining days until expiration: {remaining_days} days.")
+    except requests.exceptions.SSLError as e:
+        print(f"{url}: SSL certificate error - {str(e)}")
+    except Exception as e:
+        print(f"{url}: Connection error - {str(e)}")
+
+# List of websites to check
+websites = ["https://www.example1.com", "https://www.example2.com", "https://www.example3.com"]
+
+# Loop through the list and check each website
+for website in websites:
+    check_certificate_expiry(website)
+
+""" Replace the URLs in the websites list with the ones you want to check. The script will attempt to make an HTTPS connection to each website, and if the connection cannot be made or if the certificate is found to be expired or invalid, it will print out the relevant information. If the certificate is valid, it will also calculate and print the remaining days until expiration.
+
+Note: The verify=True parameter in the requests.get method is used to verify the SSL certificate. If you're dealing with self-signed certificates or certificates from untrusted authorities, you may need to set verify=False, but keep in mind that this is not recommended for production use as it makes the connection vulnerable to man-in-the-middle attacks. """
