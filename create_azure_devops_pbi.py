@@ -1,3 +1,10 @@
+'''
+To automate the creation of work items in Azure DevOps Boards using Python, you can use the Azure DevOps Services REST API. 
+Here's a basic example using the requests library in Python. 
+Before running the script, make sure you have the required permissions and a Personal Access Token (PAT) with appropriate scopes.
+'''
+
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -61,3 +68,15 @@ if not pbi_exists_and_done(pbi_title):
     create_pbi(pbi_title, pbi_description, assigned_user)
 else:
     print(f'A PBI with the title "{pbi_title}" already exists and is in "Done" state.')
+
+'''
+Make sure to replace 'YourOrganization', 'YourProject', and 'YourPersonalAccessToken' with your actual values. 
+Also, modify the pbi_title, pbi_description, and assigned_user variables according to your needs.
+
+This script checks if a PBI with the specified title already exists and is in the "Done" state. 
+If it does, a new PBI is created; otherwise, nothing happens. 
+Adjust the logic as needed for your specific requirements.
+
+'''
+
+
