@@ -1,0 +1,100 @@
+import requests
+import csv
+from requests.auth import HTTPBasicAuth
+
+# Replace these values with your Azure DevOps organization, project, and personal access token
+organization = 'YourOrganization'
+project = 'YourProject'
+pat = 'YourPersonalAccessToken'
+
+def create_pbi(title, description, assigned_to):
+    url = f'https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/$Product%20Backlog%20Item?api-version=7.1'
+    
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Basic {pat}'
+    }
+
+    data = {
+        'fields': {
+            'System.Title': title,
+            'System.Description': description,
+            'System.AssignedTo': assigned_to
+        }
+    }
+
+    response = requests.post(url, json=data, headers=headers, auth=HTTPBasicAuth('', pat))
+
+    if response.status_code == 200:
+        return response.json()['id']
+    else:
+        print(f'Failed to create PBI. Status code: {response.status_code}, Error: {response.text}')
+        return None
+
+def create_task(pbi_id, title, description, assigned_to):
+    url = f'https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/Task?api-version=7.1'
+    
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Basic {pat}'
+    }
+
+    data = {
+        'fields': {
+            'System.Title': title,
+            'System.Description': description,
+            'System.AssignedTo': assigned_to,
+            'System.ParentId': pbi_id
+        }
+    }
+
+    response = requests.post(url, json=data, headers=headers, auth=HTTPBasicAuth('', pat))
+
+    if response.status_code != 200:
+        print(f'Failed to create task. Status code: {response.status_code}, Error: {response.text}')
+
+# Check if a PBI with a given title already exists and is in "Done" state
+def pbi_exists_and_done(title):
+    url = f'https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.1'
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Basic {pat}'
+    }
+
+    query = {
+        'query': f"SELECT [System.Id] FROM workitems WHERE [System.Title] = '{title}' AND [System.State] = 'Done'"
+    }
+
+    response = requests.post(url, json=query, headers=headers, auth=HTTPBasicAuth('', pat))
+
+    if response.status_code == 200:
+        result = response.json()
+        return len(result['workItems']) > 0
+    else:
+        print(f'Error checking PBI status. Status code: {response.status_code}, Error: {response.text}')
+        return False
+
+# Read data from CSV file
+csv_file_path = 'your_input_file.csv'
+with open(csv_file_path, 'r') as csv_file:
+    csv_reader = csv.DictReader(csv_file)
+    for row in csv_reader:
+        pbi_title = row['PBI Title']
+        pbi_description = row['PBI Description']
+        task_title = row['Task Title']
+        task_description = row['Task Description']
+        assigned_user = row['Assigned User']
+
+        if pbi_exists_and_done(pbi_title):
+            # Create a new PBI
+            pbi_id = create_pbi(pbi_title, pbi_description, assigned_user)
+        else:
+            # Use existing PBI
+            pbi_id = get_existing_pbi_id(pbi_title)
+
+        # Create task under the PBI
+        if pbi_id is not None:
+            create_task(pbi_id, task_title, task_description, assigned_user)
+
+print('Task creation completed.')
