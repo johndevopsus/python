@@ -78,5 +78,41 @@ If it does, a new PBI is created; otherwise, nothing happens.
 Adjust the logic as needed for your specific requirements.
 
 '''
+import requests
+from requests.auth import HTTPBasicAuth
+
+# Replace these variables with your own values
+organization = 'YourOrganization'
+project = 'YourProject'
+pat = 'YourPersonalAccessToken'
+
+url = f'https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/$Product%20Backlog%20Item?api-version=7.1'
+
+headers = {
+    'Content-Type': 'application/json',
+}
+
+data = [
+    {
+        "op": "add",
+        "path": "/fields/System.Title",
+        "value": "Your PBI Title"
+    },
+    {
+        "op": "add",
+        "path": "/fields/Microsoft.VSTS.Common.Priority",
+        "value": 2
+    },
+    # Add more fields as needed
+]
+
+response = requests.post(url, headers=headers, auth=HTTPBasicAuth('', pat), json=data)
+
+if response.status_code == 200:
+    print("Work item created successfully!")
+    print(response.json())
+else:
+    print(f"Failed to create work item. Status code: {response.status_code}")
+    print(response.text)
 
 
