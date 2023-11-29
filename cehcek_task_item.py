@@ -1,3 +1,6 @@
+To check if an Azure DevOps Board work item has an unchecked task with a specific title using Python, you'll need to retrieve the details of the work item and inspect its tasks. Here's an example script using the Azure DevOps Services API and the `requests` library:
+
+```python
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -40,3 +43,8 @@ if response.status_code == 200:
 else:
     print(f"Failed to retrieve work item {work_item_id}. Status code: {response.status_code}")
     print(response.text)
+```
+
+This script retrieves the details of a specified work item and checks if it has any tasks. If tasks are present, it then checks if there is an unchecked task with the specified title. Adjust the placeholders (`YourOrganization`, `YourProject`, `YourPersonalAccessToken`, `work_item_id`, and `task_title_to_check`) with your actual values.
+
+Ensure you have the necessary permissions to read work item details and tasks from the Azure DevOps project. Handle personal access tokens securely, considering environment variables or other secure methods for storing and retrieving sensitive information.
