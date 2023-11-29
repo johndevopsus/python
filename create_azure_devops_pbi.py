@@ -115,4 +115,32 @@ else:
     print(f"Failed to create work item. Status code: {response.status_code}")
     print(response.text)
 
+------------
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+# Replace these variables with your own values
+organization = 'YourOrganization'
+project = 'YourProject'
+pat = 'YourPersonalAccessToken'
+work_item_id = '123'  # Replace with the ID of the work item you want to check
+
+url = f'https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{work_item_id}?api-version=7.1'
+
+headers = {
+    'Content-Type': 'application/json',
+}
+
+response = requests.get(url, headers=headers, auth=HTTPBasicAuth('', pat))
+
+if response.status_code == 200:
+    work_item_data = response.json()
+    print(f"Work item {work_item_id} exists:")
+    print(work_item_data)
+else:
+    print(f"Work item {work_item_id} not found. Status code: {response.status_code}")
+    print(response.text)
+
+
 
