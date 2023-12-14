@@ -220,3 +220,65 @@ if child_items_list:
     for child_item in child_items_list:
         print(child_item)
 
+
+
+################################################################################################
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+def get_child_tasks(work_item_id, personal_access_token):
+    # Replace these values with your Azure DevOps organization, project, and personal access token
+    organization = "YourOrganization"
+    project = "YourProject"
+
+    # Azure DevOps REST API base URL
+    base_url = f"https://dev.azure.com/{organization}/{project}/_apis"
+
+    # REST API endpoint to get work item details
+    url = f"{base_url}/wit/workitems/{work_item_id}"
+
+    # Define request headers with authorization
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Basic {personal_access_token}"
+    }
+
+    # Make the request to get work item details
+    response = requests.get(url, headers=headers)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Parse the JSON response
+        work_item_data = response.json()
+
+        # Extract child items of type "Task" with state not equal to "Done"
+        child_tasks = []
+        for relation in work_item_data.get("relations", []):
+            if "attributes" in relation and relation["attributes"].get("name") == "Child":
+                child_item_id = relation.get("target", {}).get("id")
+                child_state = work_item_data.get("fields", {}).get(f"{child_item_id}.System.State", "")
+                child_type = work_item_data.get("fields", {}).get(f"{child_item_id}.System.WorkItemType", "")
+                child_title = work_item_data.get("fields", {}).get(f"{child_item_id}.System.Title", "")
+
+                # Check if the child item is of type "Task" and state is not "Done"
+                if child_type == "Task" and child_state != "Done":
+                    child_tasks.append({"Task": child_title, "State": child_state})
+
+        return child_tasks
+    else:
+        # Print an error message if the request was not successful
+        print(f"Error: {response.status_code} - {response.text}")
+        return []
+
+# Replace the placeholder values for personal_access_token and work_item_id
+personal_access_token = "YourPersonalAccessToken"
+work_item_id = "YourWorkItemID"
+
+# Get child tasks that meet the specified criteria
+result = get_child_tasks(work_item_id, personal_access_token)
+
+# Print the result
+print(result)
+
+
