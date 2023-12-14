@@ -327,3 +327,54 @@ else:
 
 
 
+
+#@@@@@@@@@@@@@@@@@@@#
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+# Replace these values with your Azure DevOps organization, project, personal access token, and PBI item ID
+organization = "YourOrganization"
+project = "YourProject"
+personal_access_token = "YourPersonalAccessToken"
+pbi_item_id = "YourPBIItemID"
+
+# Azure DevOps REST API base URL
+base_url = f"https://dev.azure.com/{organization}/{project}/_apis"
+
+# REST API endpoint to get PBI item details
+url = f"{base_url}/wit/workitems/{pbi_item_id}"
+
+# Define request headers with authorization
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Basic {personal_access_token}"
+}
+
+# Make the request to get PBI item details
+response = requests.get(url, headers=headers)
+
+# Check if the request was successful (status code 200)
+if response.status_code == 200:
+    # Parse the JSON response
+    pbi_item_data = response.json()
+
+    # Extract child items (tasks) IDs
+    child_item_ids = []
+
+    for relation in pbi_item_data.get("relations", []):
+        if relation.get("attributes", {}).get("name") == "Child":
+            child_item_id = relation.get("target", {}).get("id")
+            child_item_ids.append(child_item_id)
+
+    if child_item_ids:
+        print(f"Child Item IDs: {child_item_ids}")
+    else:
+        print("No child items found.")
+else:
+    # Print an error message if the request was not successful
+    print(f"Error: {response.status_code} - {response.text}")
+
+
+
+
